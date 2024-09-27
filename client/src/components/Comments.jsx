@@ -25,6 +25,35 @@ export default function Comments({clipPos, clips}) {
     },[clipPos, clips]);
     
 
+    async function handleLike(event,id) {
+        event.preventDefault();
+        const data = {};
+        const response = await fetch(`http://localhost:8080/comment/like/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data)
+        });
+        const responseJSON = await response.json()
+        console.log(responseJSON);
+        getComments();
+    }
+
+    async function handleDelete(event,id) {
+        event.preventDefault();
+        const response = await fetch(`http://localhost:8080/comment/delete/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const responseJSON = await response.json();
+        console.log(responseJSON);
+        getComments();
+    }
+
+
     return (
         <section className="comments-section">
             <CommentForm clips={clips} clipPos={clipPos} getComments={getComments}/>
@@ -32,7 +61,9 @@ export default function Comments({clipPos, clips}) {
                 <div key={commentItem.id}>
                     <p><b>{commentItem.user_id}</b></p>
                     <p>{commentItem.comment}</p>
-                    <p>{commentItem.likes} Likes</p>
+                    <span>{commentItem.likes}</span> 
+                    <button onClick={(e)=>handleLike(e,commentItem.id)}>👍</button>
+                    <button onClick={(e)=>handleDelete(e,commentItem.id)}>🗑️</button>
                     <p>{commentItem.created_at}</p>
                 </div>
             ))}

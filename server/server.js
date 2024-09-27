@@ -37,7 +37,7 @@ app.get("/comment", async function (req, res) {
             SELECT *
             FROM tt_comments
             WHERE content = ($1)
-            ORDER BY id ASC`,
+            ORDER BY id DESC`,
             [req.query.content]
         );
         res.json(commentsContent.rows);
@@ -68,6 +68,39 @@ app.post("/comment", async function (req, res) {
         res.status(204);
     }
 })
+
+app.put("/comment/like/:id", async function (req,res) {
+    try {
+        // const operation = req.body.bool ? "+" : "-";
+        const operation = "+";
+        const updateContent = await db.query(`
+            UPDATE tt_comments
+            SET likes = likes ${operation} 1
+            WHERE id = $1`,
+            [req.params.id]
+        );
+        res.json(updateContent);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
+    }
+})
+
+app.delete("/comment/delete/:id", async (req,res) => {
+    try {
+        const deleteContent = await db.query(`
+            DELETE FROM tt_comments
+            WHERE id = $1`,
+            [req.params.id]
+        );
+        res.json(deleteContent);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
+    }
+});
 
 
 app.listen(8080, () => console.log("server is listening on port 8080..."));
