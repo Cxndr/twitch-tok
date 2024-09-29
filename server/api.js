@@ -107,7 +107,6 @@ export const setStreamersInfo = async () => {
         });
         const responseJSON = await response.json();
         streamerData = responseJSON.data;
-        console.log(streamerData);
     }
     catch (err) {
         console.log("failed getting streamers info");
@@ -131,7 +130,6 @@ export const setGamesInfo = async () => {
         });
         const responseJSON = await response.json();
         gamesData = responseJSON.data;
-        console.log(gamesData);
     }
     catch (err) {
         console.log("failed getting games info");
@@ -167,7 +165,6 @@ export const getClipsStreamers = async () => {
     for (var i=0; i < streamerData.length; i++) {
         const streamerID = streamerData[i].id;
         const streamerClips = await getClipsStreamer(streamerID);
-        console.log(streamerClips);
         clips.push(...streamerClips);
     }
 }
@@ -201,7 +198,6 @@ export const getClipsGames = async () => {
     for (var i=0; i < gamesData.length; i++) {
         const gameID = gamesData[i].id;
         const gameClips = await getClipsGame(gameID);
-        console.log(gameClips);
         clips.push(...gameClips);
     }
 }

@@ -1,12 +1,13 @@
 import CommentForm from "./CommentForm"
 import { useState, useEffect } from "react";
+import SERVER_URL from "../config";
 
 export default function Comments({clipPos, clips}) {
 
     const [comments, setComments] = useState([]);
     
     async function getComments() {
-        const url = "http://localhost:8080/comment?"
+        const url = `${SERVER_URL}/comment?`
             + new URLSearchParams({
                 "content": clips[clipPos].id.toString()
             })
@@ -28,7 +29,7 @@ export default function Comments({clipPos, clips}) {
     async function handleLike(event,id) {
         event.preventDefault();
         const data = {};
-        const response = await fetch(`http://localhost:8080/comment/like/${id}`, {
+        const response = await fetch(`${SERVER_URL}/comment/like/${id}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -42,7 +43,7 @@ export default function Comments({clipPos, clips}) {
 
     async function handleDelete(event,id) {
         event.preventDefault();
-        const response = await fetch(`http://localhost:8080/comment/delete/${id}`, {
+        const response = await fetch(`${SERVER_URL}/comment/delete/${id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json"

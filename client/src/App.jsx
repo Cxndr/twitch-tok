@@ -1,64 +1,54 @@
-import { useEffect, useState } from "react"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState, useContext } from "react";
 
-import Header from "./components/Header"
-import Clips from "./components/Clips"
-import Comments from "./components/Comments"
-import Loading from "./components/Loading"
+import FeedPage from "./pages/FeedPage";
+import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
+import SavedPage from "./pages/SavedPage";
+import SearchPage from "./pages/SearchPage";
+import NotFoundPage from "./pages/NotFoundPage";
+
+import Header from "./components/Header";
+
+import SERVER_URL from "./config";
+
 
 export default function App() {
+  
+  const [login, setLogin] = useState(null);
 
-  console.log("app is re-rendering hhhhh");
-
-  const [clips, setClips] = useState([]);
-  const [clipPos, setClipPos] = useState(0);
-  const [clipsHasLoaded, setClipsHasLoaded] = useState(false);
-  console.log("clipsHasLoaded", clipsHasLoaded)
-
-  useEffect(() => {
-    console.log("~ GETTING CLIPS ~")
-    async function fetchClips() {
-      try {
-        const response = await fetch("http://localhost:8080/clips")
-        setClips(await response.json())
-        setClipsHasLoaded(true);
+  async function getUser(user) {
+    const url = `${SERVER_URL}/user?`
+      + new URLSearchParams({
+        "username": encodeURIComponent(user).toString()
+      })
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
       }
-      catch(err) {
-        console.error(err);
-      }
-    }
-    fetchClips();
-  },[])
-  // console.log(clips);
-
-  function updateClipPos(newPos) {
-    if (newPos < clips.length && newPos >= 0) {
-      setClipPos(newPos);
-    }
+    });
+    const userJSON = await response.json()
+    return userJSON;
   }
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "ArrowDown") {
-        updateClipPos(clipPos+1);
-      }
-      else if (e.key === "ArrowUp") {
-        updateClipPos(clipPos-1);
-      }
-      else {return;}
-      console.log(clipPos);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }),[];
+  function userLogin(user,pass) {
+    
+  }
 
   return (
-    <main>
-      <Header/>
-      {clipsHasLoaded ? null : <Loading/>}
-      {clipsHasLoaded && <Clips clipPos={clipPos} clips={clips}/>}
-      {clipsHasLoaded && <Comments clipPos={clipPos} clips={clips}/>}
-    </main>
+    <BrowserRouter>
+      <main>
+        <Header/>
+        <Routes>
+          <Route path="/" element={<FeedPage/>}/>
+          <Route path="*" element={<NotFoundPage/>}/>
+          {login && <Route path="/settings" element={<SettingsPage/>}/>}
+          {login && <Route path="/saved" element={<SavedPage/>}/>}
+          {login && <Route path="/profile" element={<ProfilePage/>}/>}
+          <Route path="/search" element={<SearchPage/>}/>
+        </Routes>
+      </main>
+    </BrowserRouter>
   )
 }

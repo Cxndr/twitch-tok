@@ -3,6 +3,7 @@ import cors from 'cors';
 import pg from 'pg';
 import dotenv from 'dotenv';
 import expressWs from 'express-ws';
+import bcrypt from 'bcrypt';
 
 import * as api from './api.js';
 
@@ -22,7 +23,6 @@ const db = new pg.Pool({
 app.get("/clips", async function (req, res) {
     try {
         const clips = await api.getClips();
-        console.log(clips);
         res.json(clips);
     }
     catch(err) {
@@ -101,6 +101,67 @@ app.delete("/comment/delete/:id", async (req,res) => {
         res.status(204);
     }
 });
+
+
+app.get("/user/", async(req,res) => {
+    try {
+        const getUser = await db.query(`
+            SELECT *
+            FROM tt_users
+            WHERE user_name = ($1)`,
+            [req.query.username]
+        );
+        res.json(getUser.rows);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
+    }
+});
+
+app.post("/register", async(req,res) => {
+    try {
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        await db.query(`
+            INSERT INTO tt_users
+            (user_name, password)
+            VALUES ($1,$2)`,
+            [req.body.username, hashedPassword]
+        );
+        return res.status(201).json({message:"user created"});
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
+    }
+});
+
+app.post("/login", async(req,res) => {
+    try {
+        const userResult = await db.query(`
+            SELECT password
+            FROM tt_users
+            WHERE user_name = ($1)`,
+            [req.body.username]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({error:"user not found"});
+        }
+        const serverPass = userResult.rows[0].password;
+        const isMatching = await bcrypt.compare(req.body.password, serverPass);
+        if (isMatching) {
+            return res.status(200).json({message:"password matches"});
+        }
+        else {
+            return res.status(401).json({error:"password is incorrect"});
+        }
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
+    }
+})
 
 
 app.listen(8080, () => console.log("server is listening on port 8080..."));

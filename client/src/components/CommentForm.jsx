@@ -1,4 +1,5 @@
 import { useState } from "react"
+import SERVER_URL from "../config";
 
 
 export default function CommentForm({clips,clipPos, getComments}) {
@@ -18,7 +19,7 @@ export default function CommentForm({clips,clipPos, getComments}) {
         formData.content = clips[clipPos].id
         const formDataJSON = JSON.stringify(formData);
         formData.comment = "";
-        const response = await fetch("http://localhost:8080/comment", {
+        const response = await fetch("${SERVER_URL}/comment", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
