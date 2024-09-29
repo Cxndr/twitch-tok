@@ -5,7 +5,7 @@ import { useState } from "react";
 export default function RegisterUser() {
 
     const [formData, setFormData] = useState({
-        user: "",
+        username: "",
         password: ""
     })
 
@@ -17,9 +17,8 @@ export default function RegisterUser() {
     async function registerNewUser() {
         const formDataJSON = JSON.stringify(formData);
         // console.log(formData);
-        console.log(formDataJSON);
-        formData.username="";
-        formData.password="";
+        // formData.username="";
+        // formData.password="";
         const url = `${SERVER_URL}/register`
         const response = await fetch(url, {
             method: "POST",
@@ -41,7 +40,7 @@ export default function RegisterUser() {
         <form onSubmit={handleFormSubmit}>
             <input 
                 type="text" 
-                id="username"
+                id="reg-username"
                 name="username" 
                 placeholder="choose a username"
                 maxLength="16"
@@ -51,7 +50,7 @@ export default function RegisterUser() {
             <input 
                 type="password"
                 name="password" 
-                id="password"
+                id="reg-password"
                 placeholder="choose a password"
                 maxLength="24"
                 value={formData.password}

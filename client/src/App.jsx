@@ -6,7 +6,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import SavedPage from "./pages/SavedPage";
 import SearchPage from "./pages/SearchPage";
-import RegisterUser from "./pages/RegisterUser";
+import RegisterUser from "./pages/RegisterPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 import Header from "./components/Header";
@@ -29,18 +29,51 @@ export default function App() {
         "Content-Type": "application/json",
       }
     });
-    const userJSON = await response.json()
+    const userJSON = await response.json();
     return userJSON;
   }
 
-  function userLogin(user,pass) {
-    
+  async function checkLoginStatus() {
+    try {
+      const response = await fetch(`${SERVER_URL}/auth/status`, {
+        method: "GET",
+        credentials: "include"
+      });
+      const responseJSON = await response.json();
+      console.log("AUTH RESPONSE: ", responseJSON);
+
+      if (response.ok && response.loggedIn) {
+        console.log("user logged in");
+        return true;
+      }
+      if (response.status === 401) {
+        console.log("user not logged in");
+        return false;
+      }
+      else {
+        console.log("error getting login status");
+        return false;
+      }
+    }
+    catch(err) {
+      console.error(err);
+      return false;
+    }
   }
+
+  checkLoginStatus().then(isLoggedIn => {
+    if (isLoggedIn) {
+      setLogin(true);
+    }
+  });
+
+
+  console.log("LOGIN: ",login);
 
   return (
     <BrowserRouter>
       <main>
-        <Header login={login}/>
+        <Header login={login} setLogin={setLogin}/>
         <Routes>
           <Route path="/" element={<FeedPage/>}/>
           <Route path="*" element={<NotFoundPage/>}/>
