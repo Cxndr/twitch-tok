@@ -19,7 +19,7 @@ export default function CommentForm({clips,clipPos, getComments}) {
         formData.content = clips[clipPos].id
         const formDataJSON = JSON.stringify(formData);
         formData.comment = "";
-        const response = await fetch("${SERVER_URL}/comment", {
+        const response = await fetch(`${SERVER_URL}/comment`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
