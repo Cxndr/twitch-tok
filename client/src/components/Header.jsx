@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import LoginForm from "./LoginForm";
 
-export default function Header({login,setLogin}) {
+export default function Header({user,setUser}) {
 
     return (
         <header>
@@ -9,12 +9,12 @@ export default function Header({login,setLogin}) {
             <h3><i>tiktok style feed for twitch clips</i></h3>
             <nav>
                 <Link to="/">Feed</Link>
-                {login && <Link to="/settings">Settings</Link>}
-                {login && <Link to="/saved">Saved</Link>}
-                {login && <Link to="/profile">Profile</Link>}
-                {login ? null : <Link to="/register">Register</Link>}
+                <Link to="/settings">Settings</Link>
+                {user && <Link to="/saved">Saved</Link>}
                 <Link to="/search">Search</Link>
-                <LoginForm login={login} setLogin={setLogin}/>
+                <LoginForm user={user} setUser={setUser}/>
+                {user ? null : <Link to="/register"><button>Register</button></Link>}
+                
             </nav>
         </header>
     )

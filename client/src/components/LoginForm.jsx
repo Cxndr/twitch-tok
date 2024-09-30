@@ -2,7 +2,7 @@ import SERVER_URL from "../config";
 import { useState } from "react";
 
 
-export default function LoginForm({login, setLogin}) {
+export default function LoginForm({user, setUser}) {
 
     const [formData, setFormData] = useState({
         username: "",
@@ -14,54 +14,45 @@ export default function LoginForm({login, setLogin}) {
         console.log(formData);
     }
 
-    async function userLogin() {
-        const formDataJSON = JSON.stringify(formData);
-        console.log(formDataJSON);
-        // formData.username="";
-        // formData.password="";
-        const url = `${SERVER_URL}/login`;
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json"
-            },
-            body: formDataJSON,
-            credentials: 'include'
-        });
-        const responseJSON = await response.json();
-        if (response.ok) {
-            console.log("login successful!");
-            setLogin(true);
+    async function userLogin(username,password) {
+        try {
+            const response = await fetch(`${SERVER_URL}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({username, password})
+            });
+
+            if (!response.ok) {
+                throw new Error("login failed");
+            }
+
+            const responseJSON = await response.json();
+            sessionStorage.setItem('authToken', responseJSON.token)
+            setUser(true);
         }
-        else {
-            console.error("login failed: ", responseJSON.error);
+        catch(err) {
+            console.error(err);
+            alert("login failed");
         }
-    }
+    }    
 
     async function userLogout() {
-        const response = await fetch(`${SERVER_URL}/logout`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: 'include'
-        });
-        const responseJSON = response.json();
-        console.log(responseJSON);
-        setLogin(false);
+        sessionStorage.removeItem('authToken');
+        setUser(false);
     }
 
     async function handleFormSubmit(event) {
         event.preventDefault();
         const loginResponse = await userLogin(formData.username, formData.password)
         console.log(loginResponse);
-
-        }
+    }
 
 
     return (
         <>
-            {login
+            {user
             ?
                 <button onClick={userLogout}>Log Out</button>
             :

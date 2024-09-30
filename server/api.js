@@ -13,9 +13,7 @@ let streamerList = [
     "asmongold",
     "akademiks",
     "codemiko",
-    "athenelive",
     "watchmeforever",
-    "atheneaiheroes",
     "vedal987"
 ]
 let streamerData = [];
@@ -97,7 +95,7 @@ export const setStreamersInfo = async () => {
         for (let i=0; i < streamerList.length; i++) {
             if (i>0) paramStr += "&";
             paramStr += "login=" + streamerList[i];
-        }
+        };
         const url = "https://api.twitch.tv/helix/users?" + new URLSearchParams(paramStr);
         const response = await fetch(url,{
             headers: {
@@ -112,8 +110,41 @@ export const setStreamersInfo = async () => {
         console.log("failed getting streamers info");
         console.error(err);
     }
-
 }
+
+export const getStreamerNames = async (idList) => {
+    try {
+        let paramStr = "";
+        for (let i=0; i < idList.length; i++) {
+            if (i>0) paramStr += "&";
+            paramStr += "id=" + idList[i];
+        };
+        const url = "https://api.twitch.tv/helix/users?" + paramStr;
+        const response = await fetch(url,{
+            headers: {
+                "Authorization": `Bearer ${twitchAuthToken}`,
+                "Client-Id": twitchClientID
+            }
+        });
+        const responseJSON = await response.json();
+        const returnList = [];
+        responseJSON.data.forEach(streamer => {
+            returnList.push(
+                {
+                    label: streamer.display_name,
+                    value: streamer.id
+                }
+            )
+        });
+        return JSON.stringify(returnList);
+
+    }
+    catch(err) {
+        console.error(err);
+    }
+}
+
+
 export const setGamesInfo = async () => {
     try {
         let paramStr;
@@ -169,6 +200,27 @@ export const getClipsStreamers = async () => {
     }
 }
 
+export const searchStreamers = async(query) => {
+    try {
+        const url = "https://api.twitch.tv/helix/search/channels?"
+            + new URLSearchParams({
+                "query": query,
+                "first": 20
+            });
+        const response = await fetch(url, {
+            headers:{
+                "Authorization": `Bearer ${twitchAuthToken}`,
+                "Client-Id": twitchClientID
+            }
+        });
+        const responseJSON = await response.json();
+        return responseJSON.data;
+    }
+    catch(err) {
+        console.log("failed to search for: " + query);
+        console.error(err);
+    }
+}
 
 export const getClipsGame = async (id) => {
     try {
@@ -291,10 +343,9 @@ export function setClipTimer(seconds) {
     },milliseconds);
 }
 
-
-
-
 // *** RUN *** //
+// await setTwitchAuthToken();
+// console.log(await getStreamerNames([ 207813352, 26261471, 71092938, 85498365 ]));
 // initializeClips();
 
 // // *** INPUT *** //

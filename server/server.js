@@ -4,7 +4,7 @@ import pg from 'pg';
 import dotenv from 'dotenv';
 import expressWs from 'express-ws';
 import bcrypt from 'bcrypt';
-import session from 'express-session';
+import jwt from 'jsonwebtoken';
 
 import * as api from './api.js';
 
@@ -18,13 +18,6 @@ const corsOptions = {
     credentials: true,
 };
 app.use(cors(corsOptions));
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true} 
-    // SET SECURE TO TRUE FOR DEV! 
-}));
 
 const db = new pg.Pool({ 
     connectionString: process.env.DB_CONN_STRING
@@ -42,6 +35,38 @@ app.get("/clips", async function (req, res) {
     catch(err) {
         console.error(err);
         response.status(204);
+    }
+});
+
+app.get("/searchstreamers", async function (req,res) {
+    try {
+        await api.setTwitchAuthToken();
+        const result = await api.searchStreamers(req.query.searchquery);
+        if (!result) {
+            return res.status(204).json([]);
+        }
+        res.json(result);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.post("/streamernames", async function (req,res) {
+    try {
+        await api.setTwitchAuthToken();
+        console.log("~~ STREAMER LIST ARR: ",req.body);
+        const result = await api.getStreamerNames(req.body)
+        console.log("~~~ RESULT: ", result);
+        if (!result) {
+            return res.status(204).json([]);
+        }
+        res.json(result);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500);
     }
 });
 
@@ -116,7 +141,6 @@ app.delete("/comment/delete/:id", async (req,res) => {
     }
 });
 
-
 app.get("/user/", async(req,res) => {
     try {
         const getUser = await db.query(`
@@ -155,7 +179,7 @@ app.post("/login", async(req,res) => {
     try {
         console.log(req.body.username);
         const userResult = await db.query(`
-            SELECT password
+            SELECT password, id
             FROM tt_users
             WHERE user_name = ($1)`,
             [req.body.username]
@@ -164,13 +188,16 @@ app.post("/login", async(req,res) => {
             return res.status(404).json({error:"user not found"});
         }
         const serverPass = userResult.rows[0].password;
-        console.log("userpass: ",req.body.password)
-        console.log("serverpass: ",serverPass);
-        console.log(userResult.rows);
+        const userId = userResult.rows[0].id;
         const isMatching = await bcrypt.compare(req.body.password, serverPass);
         if (isMatching) {
-            req.session.userId = userResult.rows[0].id;
-            return res.status(200).json({message:"login successful!"});
+            const token = jwt.sign({id:userId, user_name:req.body.username}, process.env.JWT_SECRET, {
+                expiresIn: '24h',
+            });
+            return res.status(200).json({
+                message:"login successful!",
+                token: token
+            });
         }
         else {
             return res.status(401).json({error:"password is incorrect"});
@@ -182,36 +209,93 @@ app.post("/login", async(req,res) => {
     }
 })
 
-app.get("/auth/status", (req,res) => {
-        if (req.session && req.session.userId) {
-            return res.status(200).json({
-                loggedIn: true, 
-                userId: req.session.userId
-            })
+function authenticateToken(req,res,next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({message: "Token missing"});
+    }
+
+    jwt.verify(token,process.env.JWT_SECRET,(err,user) =>{
+        if (err) {
+            return res.status(403).json({message:"invalid token"});
         }
-        else {
-            return res.status(401).json({
-                loggedIn: false
-            })
-        }
+        req.user = user;
+        next();
+    });
+}
+
+app.get("/profile", authenticateToken, async (req,res) => {
+    const userResult = await db.query(`
+        SELECT 
+            id, 
+            created_at, 
+            user_name,
+            user_color,
+            user_feed_streamers,
+            user_feed_categories 
+        FROM tt_users
+        WHERE id = ($1)`,
+        [req.user.id]
+    );
+    if (userResult.rows.length === 0) {
+        return res.status(404).json({error:"user not found"});
+    }
+    res.json(userResult.rows[0]);
 });
 
-app.post("/logout", (req,res) => {
-    if (req.session) {
-        req.session.destroy((err) => {
-            if (err) {
-                return res.status(204).json({error: "Logout failed"})
-            }
-            else {
-                res.clearCookie("connect.sid");
-                return res.status(200).json({message: "Logout success"});
-            } 
-        });
-    }
-    else {
-        return res.status(200).json({message: "No session to log out from"});
-    }
-});
+app.put("/update-user", authenticateToken, async (req,res) => {
+    try {
+        const saltRounds = 10;
+        let hashedPassword = null;
+        if (req.body.password) {
+            hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        }
 
+        let updateQuery = 'UPDATE tt_users SET ';
+        const queryParams = [];
+        let paramIndex = 1;
+        if (req.body.user_name) {
+            updateQuery += `user_name = $${paramIndex}, `;
+            queryParams.push(req.body.user_name);
+            paramIndex++;
+        }
+        if (hashedPassword) {
+            updateQuery += `password = $${paramIndex}, `;
+            queryParams.push(hashedPassword);
+            paramIndex++;
+        }
+        if (req.body.user_color) {
+            updateQuery += `user_color = $${paramIndex}, `;
+            queryParams.push(req.body.user_color);
+            paramIndex++;
+        }
+        if (req.body.user_feed_streamers) {
+            updateQuery += `user_feed_streamers = $${paramIndex}, `;
+            queryParams.push(req.body.user_feed_streamers);
+            paramIndex++;
+        }
+        if (req.body.user_feed_categories) {
+            updateQuery += `user_feed_categories = $${paramIndex}, `;
+            queryParams.push(req.body.user_feed_categories);
+            paramIndex++;
+        }
+        updateQuery = updateQuery.slice(0,-2); // remove trailing ", "
+        updateQuery += ` WHERE id = $${paramIndex}`;
+        queryParams.push(req.user.id);
+
+        const updateResult = await db.query(updateQuery, queryParams);
+
+        if (updateResult.rowCount === 0) {
+            return res.status(404).json({error:"user not found"});
+        }
+        return res.status(200).json({message: "update successful"});
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500);
+    }
+    
+});
 
 app.listen(8080, () => console.log("server is listening on port 8080..."));
