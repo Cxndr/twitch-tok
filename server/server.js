@@ -53,12 +53,40 @@ app.get("/searchstreamers", async function (req,res) {
     }
 });
 
+app.get("/searchgames", async function (req,res) {
+    try {
+        await api.setTwitchAuthToken();
+        const result = await api.searchGames(req.query.searchquery);
+        if (!result) {
+            return res.status(204).json([]);
+        }
+        res.json(result);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 app.post("/streamernames", async function (req,res) {
     try {
         await api.setTwitchAuthToken();
-        console.log("~~ STREAMER LIST ARR: ",req.body);
         const result = await api.getStreamerNames(req.body)
-        console.log("~~~ RESULT: ", result);
+        if (!result) {
+            return res.status(204).json([]);
+        }
+        res.json(result);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500);
+    }
+});
+
+app.post("/gamenames", async function (req,res) {
+    try {
+        await api.setTwitchAuthToken();
+        const result = await api.getGameNames(req.body)
         if (!result) {
             return res.status(204).json([]);
         }
@@ -278,6 +306,11 @@ app.put("/update-user", authenticateToken, async (req,res) => {
         if (req.body.user_feed_categories) {
             updateQuery += `user_feed_categories = $${paramIndex}, `;
             queryParams.push(req.body.user_feed_categories);
+            paramIndex++;
+        }
+        if (req.body.hidden_streamers) {
+            updateQuery += `hidden_streamers = $${paramIndex}, `;
+            queryParams.push(req.body.hidden_streamers);
             paramIndex++;
         }
         updateQuery = updateQuery.slice(0,-2); // remove trailing ", "

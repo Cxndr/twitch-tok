@@ -144,6 +144,37 @@ export const getStreamerNames = async (idList) => {
     }
 }
 
+export const getGameNames = async (idList) => {
+    try {
+        let paramStr = "";
+        for (let i=0; i < idList.length; i++) {
+            if (i>0) paramStr += "&";
+            paramStr += "id=" + idList[i];
+        };
+        const url = "https://api.twitch.tv/helix/games?" + paramStr;
+        const response = await fetch(url,{
+            headers: {
+                "Authorization": `Bearer ${twitchAuthToken}`,
+                "Client-Id": twitchClientID
+            }
+        });
+        const responseJSON = await response.json();
+        const returnList = [];
+        responseJSON.data.forEach(game => {
+            returnList.push(
+                {
+                    label: game.name,
+                    value: game.id
+                }
+            )
+        });
+        return JSON.stringify(returnList);
+
+    }
+    catch(err) {
+        console.error(err);
+    }
+}
 
 export const setGamesInfo = async () => {
     try {
@@ -203,6 +234,28 @@ export const getClipsStreamers = async () => {
 export const searchStreamers = async(query) => {
     try {
         const url = "https://api.twitch.tv/helix/search/channels?"
+            + new URLSearchParams({
+                "query": query,
+                "first": 20
+            });
+        const response = await fetch(url, {
+            headers:{
+                "Authorization": `Bearer ${twitchAuthToken}`,
+                "Client-Id": twitchClientID
+            }
+        });
+        const responseJSON = await response.json();
+        return responseJSON.data;
+    }
+    catch(err) {
+        console.log("failed to search for: " + query);
+        console.error(err);
+    }
+}
+
+export const searchGames = async(query) => {
+    try {
+        const url = "https://api.twitch.tv/helix/search/categories?"
             + new URLSearchParams({
                 "query": query,
                 "first": 20
