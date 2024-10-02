@@ -231,6 +231,20 @@ export const getClipsStreamers = async () => {
     }
 }
 
+export const getClipsStreamersId = async (arr) => {
+    try {
+        const returnClips = []
+        for (const id of arr) {
+            const streamerClips = await getClipsStreamer(id);
+            returnClips.push(...streamerClips);
+        }
+        return returnClips;
+    }
+    catch(err) {
+        console.error(err);
+    }
+}
+
 export const searchStreamers = async(query) => {
     try {
         const url = "https://api.twitch.tv/helix/search/channels?"
@@ -307,21 +321,76 @@ export const getClipsGames = async () => {
     }
 }
 
+export const getClipsGamesId = async (arr) => {
+    try {
+        const returnClips = []
+        for (const id of arr) {
+            const gameClips = await getClipsGame(id);
+            returnClips.push(...gameClips);
+        }
+        return returnClips;
+    }
+    catch(err) {
+        console.error(err);
+    }
+}
+
+export function chunkArray(arr, chunkSize) {
+    const chunks = [];
+    for (let i=0; i < arr.length; i += chunkSize) {
+        chunks.push(arr.slice(i, i + chunkSize));
+    }
+    console.log("CHUNKS: ",chunks)
+    return chunks;
+}
+
+export const getClipsIds = async(arr) => {
+    const chunkedClipsArr = chunkArray(arr,100);
+    let clips = [];
+    try {
+        for (let i=0; i < chunkedClipsArr.length; i++) {
+            const params = new URLSearchParams();
+            chunkedClipsArr[i].forEach(id => {
+                params.append('id', id);
+            });
+            params.append('first', '100');
+            const queryString = params.toString();
+            const url = "https://api.twitch.tv/helix/clips?"
+            + queryString;
+            const response = await fetch(url,{
+                headers:{
+                    "Authorization": `Bearer ${twitchAuthToken}`,
+                    "Client-Id": twitchClientID
+                }
+            });
+            const responseJSON = await response.json();
+            clips.push(responseJSON.data);
+            
+        }
+        return clips[0];
+    }
+    catch(err) {
+        console.error(err);
+    }
+}
+
 export function removeDuplicates(arr) {
 // this can be made faster but potentially less reliable down the line by sorting first 
 // and comparing to arr[i-1].id instead.
 
-    let unique = [];
-    for (let i=0; i < arr.length; i++) {
-        let addItem = true;
-        if (i > 0) {
-            for (let j=0; j < unique.length; j++) {
-                if (unique[j].id === arr[i].id) addItem = false;    
-            }
-        }
-        if (addItem === true) unique.push(arr[i]);
-    }
-    return unique;
+    // let unique = [];
+    // for (let i=0; i < arr.length; i++) {
+    //     let addItem = true;
+    //     if (i > 0) {
+    //         for (let j=0; j < unique.length; j++) {
+    //             if (unique[j].id === arr[i].id) addItem = false;    
+    //         }
+    //     }
+    //     if (addItem === true) unique.push(arr[i]);
+    // }
+    // return unique;
+
+    return [...new Set(arr)];
 }
 
 export const sortClipsViewCount = (clips_arr) => {
@@ -339,7 +408,30 @@ export async function getClips() {
     return(clips);
 }
 
-
+export async function getClipsFeed(streamers,games,hidden) {
+    await setTwitchAuthToken();
+    console.log(streamers);
+    console.log(games);
+    console.log(hidden);
+    const streamerClips = await getClipsStreamersId(streamers);
+    const gamesClips = await getClipsGamesId(games);
+    let returnClips = [...streamerClips, ...gamesClips];
+    returnClips = removeDuplicates(returnClips);
+    // console.log(returnClips);
+    // for (var i=0; i<hidden.length; i++) {
+    //     for (var j=returnClips.length-1; j>=0; j--) {
+    //         console.log("j:",returnClips[j].broadcaster_id);
+    //         console.log("i:",hidden[i]);
+    //         console.log("----------")
+    //         if (returnClips[j].broadcaster_id.toString() === hidden[i].toString) {
+    //             console.log("FOUND DING DING IDNG");
+    //             returnClips.splice(j,1);
+    //         }
+    //     }
+    // }
+    sortClipsViewCount(returnClips);
+    return(returnClips);
+}
 
 export function getClipSource(clipID) {
     prefix = "https://clips.twitch.tv/embed?"
@@ -398,6 +490,10 @@ export function setClipTimer(seconds) {
 
 // *** RUN *** //
 // await setTwitchAuthToken();
+// console.log(await getClipsIds([
+//     "CarefulCuriousRingGingerPower-qDJmWFgTUi5XVWeF",
+//     "RenownedSaltyTapirSquadGoals-Ge_UF0pR6aDfHp1U"
+// ]));
 // console.log(await getStreamerNames([ 207813352, 26261471, 71092938, 85498365 ]));
 // initializeClips();
 

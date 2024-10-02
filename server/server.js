@@ -24,17 +24,31 @@ const db = new pg.Pool({
 });
 
 
-// do a get api route for now getting data already set in api.js
-// - later do a post route to get users specific streamer/catoegries list
-
-app.get("/clips", async function (req, res) {
+app.post("/clips", async function (req, res) {
     try {
-        const clips = await api.getClips();
+        const streamers = req.body.streamers;
+        const games = req.body.games;
+        const hidden = req.body.hidden;
+        const clips = await api.getClipsFeed(streamers,games,hidden);
         res.json(clips);
     }
     catch(err) {
         console.error(err);
-        response.status(204);
+        res.status(204);
+    }
+});
+
+app.post("/saved-clips", async function (req,res) {
+    try {
+        console.log("reqbody: ",req.body)
+        await api.setTwitchAuthToken();
+        const clips = await api.getClipsIds(req.body)
+        console.log(clips);
+        res.json(clips);
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
     }
 });
 
@@ -101,9 +115,10 @@ app.post("/gamenames", async function (req,res) {
 app.get("/comment", async function (req, res) {
     try {
         const commentsContent = await db.query(`
-            SELECT *
-            FROM tt_comments
-            WHERE content = ($1)
+            SELECT c.*, u.user_name, u.user_color, u.created_at
+            FROM tt_comments c, tt_users u
+            WHERE c.user_id = u.id
+            AND c.content = ($1)
             ORDER BY id DESC`,
             [req.query.content]
         );
@@ -136,17 +151,60 @@ app.post("/comment", async function (req, res) {
     }
 })
 
-app.put("/comment/like/:id", async function (req,res) {
+app.put("/comment/like/:id", authenticateToken, async function (req,res) {
     try {
-        // const operation = req.body.bool ? "+" : "-";
-        const operation = "+";
-        const updateContent = await db.query(`
+        const getLikes = await db.query(`
+            SELECT liked_comments
+            FROM tt_users
+            WHERE id = $1`,
+            [req.user.id]
+        );
+        const likedCommentsArr = getLikes.rows[0].liked_comments;
+        console.log(likedCommentsArr);
+        console.log(req.params.id);
+        let alreadyLiked = false;
+        if(likedCommentsArr.includes(parseInt(req.params.id))) {
+            alreadyLiked = true;
+        }
+        console.log("liked:", alreadyLiked);
+        const operation = alreadyLiked ? "-" : "+";
+        console.log("OPERATION: ",operation);
+        const updateComment = await db.query(`
             UPDATE tt_comments
             SET likes = likes ${operation} 1
             WHERE id = $1`,
             [req.params.id]
         );
-        res.json(updateContent);
+        let updateUser
+        if (alreadyLiked) {
+            updateUser = await db.query(`
+                UPDATE tt_users
+                SET liked_comments = array_remove(liked_comments, $1)
+                WHERE id = $2`,
+                [req.params.id, req.user.id]
+            );
+            const removeUserFromComment = await db.query(`
+                UPDATE tt_comments
+                SET users_liked = array_remove(users_liked, $1)
+                WHERE id = $2`,
+                [req.user.id, req.params.id]
+            );
+        }
+        else {
+            updateUser = await db.query(`
+                UPDATE tt_users
+                SET liked_comments = array_append(liked_comments, $1)
+                WHERE id = $2`,
+                [req.params.id, req.user.id]
+            );
+            const AddUserToComment = await db.query(`
+                UPDATE tt_comments
+                SET users_liked = array_append(users_liked, $1)
+                WHERE id = $2`,
+                [req.user.id, req.params.id]
+            );
+        }
+        res.json({alreadyLiked});
     }
     catch(err) {
         console.error(err);
@@ -261,7 +319,9 @@ app.get("/profile", authenticateToken, async (req,res) => {
             user_name,
             user_color,
             user_feed_streamers,
-            user_feed_categories 
+            user_feed_categories,
+            hidden_streamers,
+            saved_clips
         FROM tt_users
         WHERE id = ($1)`,
         [req.user.id]
@@ -313,6 +373,11 @@ app.put("/update-user", authenticateToken, async (req,res) => {
             queryParams.push(req.body.hidden_streamers);
             paramIndex++;
         }
+        if (req.body.saved_clips) {
+            updateQuery += `saved_clips = $${paramIndex}, `;
+            queryParams.push(req.body.saved_clips);
+            paramIndex++;
+        }
         updateQuery = updateQuery.slice(0,-2); // remove trailing ", "
         updateQuery += ` WHERE id = $${paramIndex}`;
         queryParams.push(req.user.id);
@@ -329,6 +394,44 @@ app.put("/update-user", authenticateToken, async (req,res) => {
         res.status(500);
     }
     
+});
+
+app.put("/update-user/saved-clips", authenticateToken, async (req,res) => {
+    try {
+        const clipId = req.body.clip_id;
+        if (req.body.bool) {
+            const updateContent = await db.query(`
+                UPDATE tt_users
+                SET saved_clips = array_append(saved_clips, $1)
+                WHERE id = $2`,
+                [clipId, req.user.id]
+            );
+            console.log(updateContent.rowCount === 0);
+            if (updateContent.rowCount === 0) {
+                return res.status(404).json({error:"user not found"});
+            }
+            return res.status(200).json({message: "clip saved successfully"});
+        }
+        if (!req.body.bool) {
+            const updateContent = await db.query(`
+                UPDATE tt_users
+                SET saved_clips = array_remove(saved_clips, $1)
+                WHERE id = $2`,
+                [clipId,req.user.id]
+            );
+            console.log(updateContent.rowCount === 0);
+            if (updateContent.rowCount === 0) {
+                return res.status(404).json({error:"user not found"});
+            }
+            return res.status(200).json({message: "clip removed successfully"});
+        }
+        return res.status(204).json({message: "save/unsave value not provided!"});
+        
+    }
+    catch(err) {
+        console.error(err);
+        res.status(204);
+    }
 });
 
 app.listen(8080, () => console.log("server is listening on port 8080..."));

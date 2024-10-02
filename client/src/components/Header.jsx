@@ -1,21 +1,22 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import LoginForm from "./LoginForm";
 
-export default function Header({user,setUser}) {
+export default function Header({user,setUser, profileData}) {
 
     return (
         <header>
-            <h1>TwitchTok</h1>
-            <h3><i>tiktok style feed for twitch clips</i></h3>
+            <div className="title">
+                <h1>TwitchTok</h1>
+                <h3>tiktok style feed for twitch clips</h3>
+            </div>
             <nav>
-                <Link to="/">Feed</Link>
-                <Link to="/settings">Settings</Link>
-                {user && <Link to="/saved">Saved</Link>}
-                <Link to="/search">Search</Link>
-                <LoginForm user={user} setUser={setUser}/>
-                {user ? null : <Link to="/register"><button>Register</button></Link>}
-                
+                <NavLink to="/">🎬 Feed</NavLink>
+                <NavLink to="/settings">⚙️ Settings</NavLink>
+                <NavLink to="/saved">❤️ Saved</NavLink>
             </nav>
+            <div className="user-nav">
+                <LoginForm user={user} setUser={setUser} profileData={profileData}/>
+            </div>
         </header>
     )
 }

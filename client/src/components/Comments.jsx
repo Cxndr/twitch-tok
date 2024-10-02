@@ -1,8 +1,9 @@
 import CommentForm from "./CommentForm"
 import { useState, useEffect } from "react";
 import SERVER_URL from "../config";
+import { timeAgo } from "../utils/utils";
 
-export default function Comments({clipPos, clips}) {
+export default function Comments({clipPos, clips, profileData}) {
 
     const [comments, setComments] = useState([]);
     
@@ -25,20 +26,27 @@ export default function Comments({clipPos, clips}) {
         getComments();
     },[clipPos, clips]);
     
-
     async function handleLike(event,id) {
         event.preventDefault();
         const data = {};
-        const response = await fetch(`${SERVER_URL}/comment/like/${id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data)
-        });
-        const responseJSON = await response.json()
-        console.log(responseJSON);
-        getComments();
+        const token = sessionStorage.getItem('authToken');
+        data.user_id = profileData.id;
+        try {
+            const response = await fetch(`${SERVER_URL}/comment/like/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            });
+            const responseJSON = await response.json()
+            console.log("res:" ,responseJSON);
+            getComments();
+        }
+        catch(err) {
+            console.error(err);
+        }
     }
 
     async function handleDelete(event,id) {
@@ -54,21 +62,39 @@ export default function Comments({clipPos, clips}) {
         getComments();
     }
 
-
     return (
-        <section className="comments-section">
-            <CommentForm clips={clips} clipPos={clipPos} getComments={getComments}/>
-            {comments.map((commentItem) => (
-                <div key={commentItem.id}>
-                    <p><b>{commentItem.user_id}</b></p>
-                    <p>{commentItem.comment}</p>
-                    <span>{commentItem.likes}</span> 
-                    <button onClick={(e)=>handleLike(e,commentItem.id)}>👍</button>
-                    <button onClick={(e)=>handleDelete(e,commentItem.id)}>🗑️</button>
-                    <p>{commentItem.created_at}</p>
-                </div>
-            ))}
-        </section>
+        <>
+            <CommentForm clips={clips} clipPos={clipPos} getComments={getComments} profileData={profileData}/>
+            <div className="comments">
+                {comments.map((commentItem) => (
+                    <div 
+                        key={commentItem.id}
+                        className="comment-item"
+                    >
+                        <p 
+                            className="comment-user"
+                            style={{color:commentItem.user_color}}
+                        >
+                            <b>{commentItem.user_name}</b>
+                        </p>
+                        <p className="comment-content">{commentItem.comment}</p>
+                        <span></span> 
+                        <button
+                            className={
+                                commentItem.users_liked.includes(parseInt(profileData.id))
+                                ? "comment-like-button liked"
+                                : "comment-like-button"
+                            }
+                            onClick={(e)=>handleLike(e,commentItem.id)}>{commentItem.likes} 👍</button>
+                        {(commentItem.user_id === profileData.id)
+                        &&
+                        <button className="comment-delete-button" onClick={(e)=>handleDelete(e,commentItem.id)}>🗑️</button>
+                        }
+                        <p className="comment-timestamp">{timeAgo(commentItem.created_at)}</p>
+                    </div>
+                ))}
+            </div>
+        </>
     )
 }
 

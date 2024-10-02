@@ -3,7 +3,7 @@ import AsyncSelect from 'react-select/async'
 import { useState, useEffect} from "react"
 import SERVER_URL from "../config";
 
-export default function SelectCategories({profileData}) {
+export default function SelectCategories({profileData, getProfile}) {
 
     const animatedComponents = makeAnimated();
     const [selectedGames, setSelectedGames] = useState([]);
@@ -28,6 +28,7 @@ export default function SelectCategories({profileData}) {
             });
             if (!response.ok) {
                 console.error("Error fetching categories");
+                getProfile();
                 return[];
             }
             const responseJSON = await response.json();
@@ -101,9 +102,10 @@ export default function SelectCategories({profileData}) {
 
 
     return (
-        <div>
+        <div className="select-container">
         {gamesLoaded ?
             <>
+                <p className="settings-label">Categories (games) to show in my feed:</p>
                 <AsyncSelect
                     isMulti
                     components={animatedComponents}

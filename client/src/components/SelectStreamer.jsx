@@ -3,7 +3,7 @@ import AsyncSelect from 'react-select/async'
 import { useState, useEffect} from "react"
 import SERVER_URL from "../config";
 
-export default function SelectStreamer({profileData}) {
+export default function SelectStreamer({profileData, getProfile}) {
 
     const animatedComponents = makeAnimated();
     const [selectedChannels, setSelectedChannels] = useState([]);
@@ -89,6 +89,7 @@ export default function SelectStreamer({profileData}) {
             if (response.ok) {
                 const responseJSON = await response.json();
                 console.log("lists updated", responseJSON);
+                getProfile();
             }
             else {
                 throw new Error("updating lists failed");
@@ -99,11 +100,11 @@ export default function SelectStreamer({profileData}) {
         }
     }
 
-
     return (
-        <div>
+        <div className="select-container">
         {streamersLoaded ?
             <>
+                <p className="settings-label">Streamers to show in my feed:</p>
                 <AsyncSelect
                     isMulti
                     components={animatedComponents}

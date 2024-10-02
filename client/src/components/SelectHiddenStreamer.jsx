@@ -10,7 +10,6 @@ export default function SelectHiddenStreamer({profileData}) {
     const [savedStreamers, setSavedStreamers] = useState([]);
     const [streamersLoaded, setStreamersLoaded] = useState(false);
 
-
     const handleStreamersChange = (selected) => {
         setSelectedChannels(selected);
     };

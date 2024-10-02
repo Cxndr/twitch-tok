@@ -67,7 +67,7 @@ export default function UserEditForm({profileData,setEditingUser,getProfile}) {
     }
 
     return (
-        <form onSubmit={handleFormSubmit}>
+        <form className="user-edit-form"onSubmit={handleFormSubmit}>
             <input
                 type="text"
                 name="user_name"

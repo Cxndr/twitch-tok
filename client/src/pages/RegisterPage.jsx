@@ -2,7 +2,7 @@ import SERVER_URL from "../config";
 import { useState } from "react";
 
 
-export default function RegisterUser() {
+export default function RegisterPage() {
 
     const [formData, setFormData] = useState({
         username: "",

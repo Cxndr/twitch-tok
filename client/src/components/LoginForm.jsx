@@ -1,8 +1,9 @@
 import SERVER_URL from "../config";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 
-export default function LoginForm({user, setUser}) {
+export default function LoginForm({user, setUser, profileData}) {
 
     const [formData, setFormData] = useState({
         username: "",
@@ -51,35 +52,47 @@ export default function LoginForm({user, setUser}) {
 
 
     return (
-        <>
+        <div>
             {user
             ?
-                <button onClick={userLogout}>Log Out</button>
+                <>
+                    <span className="user-display-text">Logged in as 
+                        <span className="user-display-name"
+                        style={{color:profileData.user_color}}>
+                            <b> {profileData.user_name}</b>
+                        </span>
+                    </span>
+                    <button onClick={userLogout}>Log Out</button>
+                </>
             :
-                <form onSubmit={handleFormSubmit}>
-                    <input 
-                        type="text" 
-                        id="log-username"
-                        name="username" 
-                        placeholder="choose a username"
-                        maxLength="16"
-                        value={formData.username}
-                        onChange={handleInputChange}
-                    />
-                    <input 
-                        type="password"
-                        name="password" 
-                        id="log-password"
-                        placeholder="choose a password"
-                        maxLength="24"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                    />
-                    <button type="submit">Login</button>
-                </form>
+                <>
+                    <form onSubmit={handleFormSubmit}>
+                        <input 
+                            type="text" 
+                            id="log-username"
+                            name="username" 
+                            placeholder="username"
+                            maxLength="16"
+                            value={formData.username}
+                            onChange={handleInputChange}
+                        />
+                        <input 
+                            type="password"
+                            name="password" 
+                            id="log-password"
+                            placeholder="password"
+                            maxLength="24"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                        />
+                        <button type="submit">Login</button>
+                        <Link to="/register"><button>Register</button></Link>
+                    </form>
+                    
+                </>
                 
             }
-        </>
+        </div>
 
     )
 }
