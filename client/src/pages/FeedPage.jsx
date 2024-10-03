@@ -36,7 +36,7 @@ export default function FeedPage({profileData, getProfile, autoMode, setAutoMode
         const fetchDataJSON = JSON.stringify(fetchData);
         console.log("json fetch:", fetchDataJSON);
         try {
-          const response = await fetch("http://localhost:8080/clips", {
+          const response = await fetch(`${SERVER_URL}/clips`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
