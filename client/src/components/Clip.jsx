@@ -1,7 +1,7 @@
 
 export default function Clip({clipData, autoplay}) {
     let src = clipData.embed_url
-    src += `&parent=localhost`
+    src += `&parent=twitch-tok.onrender.com`
     if (autoplay) src += `&autoplay=true`
 
     return (
