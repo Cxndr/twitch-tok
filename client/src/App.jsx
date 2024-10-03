@@ -70,7 +70,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Header user={user} setUser={setUser} profileData={profileData}/>
+      <Header user={user} setUser={setUser} profileData={profileData} setProfileData={setProfileData}/>
       <main>
         <Routes>
           <Route path="/" element={<FeedPage profileData={profileData} getProfile={getProfile} autoMode={autoMode} setAutoMode={setAutoMode}/>}/>

@@ -135,16 +135,14 @@ export default function FeedPage({profileData, getProfile, autoMode, setAutoMode
           clearTimeout(autoModeTimerRef.current);
       }
 
-      // Set a new timer based on the current clip's duration
       autoModeTimerRef.current = setTimeout(() => {
           updateClipPos(clipPos + 1);
-      }, (clips[clipPos].duration * 1000) + 5000);  // Adding extra 5 seconds for buffer/loading
+      }, (clips[clipPos].duration * 1000) + 5000);
   }
 
   useEffect(() => {
       autoClipTimer();
       return () => {
-          // Clear the timer when autoMode changes or component unmounts
           if (autoModeTimerRef.current) {
               clearTimeout(autoModeTimerRef.current);
           }
@@ -212,8 +210,15 @@ export default function FeedPage({profileData, getProfile, autoMode, setAutoMode
 
               <div className="clip-settings">
                 <label>
-                  <Switch onChange={handleAutoSwitch} checked={autoMode}/>
+                  <div className="auto-mode-switch">
+                    <Switch 
+                      onChange={handleAutoSwitch}
+                      checked={autoMode}
+                    />
+                  </div>
+                  Auto Mode 
                 </label>
+                <span className="instruction-text"> Use arrow keys or auto to cycle clips.</span>
               </div>
 
               <div className="clip-info">

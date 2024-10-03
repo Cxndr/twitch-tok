@@ -37,7 +37,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <form onSubmit={handleFormSubmit}>
+        <form className="register-form" onSubmit={handleFormSubmit}> 
             <input 
                 type="text" 
                 id="reg-username"

@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import LoginForm from "./LoginForm";
 
-export default function Header({user,setUser, profileData}) {
+export default function Header({user,setUser, profileData, setProfileData}) {
 
     return (
         <header>
@@ -15,7 +15,7 @@ export default function Header({user,setUser, profileData}) {
                 <NavLink to="/saved">❤️ Saved</NavLink>
             </nav>
             <div className="user-nav">
-                <LoginForm user={user} setUser={setUser} profileData={profileData}/>
+                <LoginForm user={user} setUser={setUser} profileData={profileData} setProfileData={setProfileData}/>
             </div>
         </header>
     )

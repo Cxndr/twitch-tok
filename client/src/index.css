@@ -171,6 +171,7 @@ header .user-display-text {
 
 main {
   height: 83svh;
+  min-height: 83svh;
   padding: 2rem 2rem;
   background-color: var(--black-mid);
   filter: drop-shadow(0px 0px 2px #000);
@@ -196,7 +197,7 @@ main {
 }
 .sidebar-section {
   height: 100%;
-  width: 0;
+  width: inherit;
   flex-grow: 1;
   padding: 0.5rem 1rem 0rem 1rem;
   display: flex;
@@ -402,6 +403,38 @@ main {
   top: 0.6rem;
 }
 
+.clip-settings {
+  background-color: var(--black-light);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  position: relative;
+  margin-bottom: 1rem;
+}
+.clip-settings label {
+  vertical-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--offest-white);
+}
+.auto-mode-switch {
+  position: relative;
+  top: 0.3rem;
+  display: inline;
+  padding-right: 0.7rem;
+}
+.instruction-text {
+  opacity: 0.5;
+  padding-left: 1rem;
+  vertical-align: middle;
+  position: absolute;
+  top: 0.9rem;
+}
+.login-section input, .login-section button {
+  margin: 0rem 0.3rem;
+}
+.register-form input, .register-form button {
+  margin: 0.5rem;
+}
 
 footer {
   height: 5svh;
@@ -425,6 +458,22 @@ footer span {
     flex-direction: column;
     height: auto;
   }
+  header {
+    flex-wrap: wrap;
+    height: auto;
+  }
+  header .title {
+    /* display: block; */
+    width: 100%;
+    position: relative;
+    order: 1;
+    left: 50%;
+    transform: translateX(-45%);
+    margin-bottom: 2rem;
+  }
+  header .user-nav {
+    padding-top: 0.5rem;
+  }
   .clips-section {
     width: 100%;
     height: auto;
@@ -436,5 +485,8 @@ footer span {
     width: 100%;
     aspect-ratio: 16 / 9;
     position: relative;
+  }
+  .sidebar-section {
+    width: 100%;
   }
 }

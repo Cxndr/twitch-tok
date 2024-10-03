@@ -15,10 +15,11 @@ export default function SettingsPage({user,profileData,getProfile}) {
     }
     console.log("SETTINGPAGE PROFILE: ", profileData);
     return (
-        <div className="settings-page">
+        <>
             {user
             ?
-                editingUser
+            <div className="settings-page">
+                {editingUser
                 ? <UserEditForm profileData={profileData} setEditingUser={setEditingUser} getProfile={getProfile}/>
                 :
                 <>
@@ -30,13 +31,15 @@ export default function SettingsPage({user,profileData,getProfile}) {
                     </div>
                     <SelectStreamer profileData={profileData} getProfile={getProfile}/>
                     <SelectCategories profileData={profileData} getProfile={getProfile}/>
-                </>
+                </>}
+            </div>
             :
             <div>
                 <p style={{fontSize: '1.5rem', textAlign: 'center', paddingBottom: '3rem'}}>Login/Register to use custom settings!</p>
                 <RegisterPage/>
             </div>
             }
-        </div>
+        
+        </>
     )
 }

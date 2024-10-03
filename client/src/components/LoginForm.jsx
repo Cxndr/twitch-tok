@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 
-export default function LoginForm({user, setUser, profileData}) {
+export default function LoginForm({user, setUser, profileData, setProfileData}) {
 
     const [formData, setFormData] = useState({
         username: "",
@@ -42,6 +42,8 @@ export default function LoginForm({user, setUser, profileData}) {
     async function userLogout() {
         sessionStorage.removeItem('authToken');
         setUser(false);
+        setProfileData([]);
+
     }
 
     async function handleFormSubmit(event) {
@@ -52,7 +54,7 @@ export default function LoginForm({user, setUser, profileData}) {
 
 
     return (
-        <div>
+        <div className="login-section">
             {user
             ?
                 <>
