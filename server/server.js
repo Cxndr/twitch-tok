@@ -23,6 +23,9 @@ const db = new pg.Pool({
     connectionString: process.env.DB_CONN_STRING
 });
 
+app.get("/", (req, res) => {
+    res.send("root route accessed");
+});
 
 app.post("/clips", async function (req, res) {
     try {
