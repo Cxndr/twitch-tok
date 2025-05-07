@@ -9,7 +9,7 @@ Twitches integration for clips has been largely underdeveloped. There are many p
 This web app aims to fill the gap left - allowing you to select a list of games and categories that will generate an _algorithmless_ feed to scroll through the top clips from those channels and categories.
 
 ## Basic Usage
-1. visit the live site.
+1. Visit [the live site](https://twitch-tok-client.onrender.com).
 2. Create a profile.
 3. Under settings set a list of channels and categories you'd like to follow.
 4. The Feed page will aggregate clips from those channels in the past few days from highest to lowest views.
